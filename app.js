@@ -1,10 +1,13 @@
 const express = require("express");
 const app = express();
+const request = require("request");
+const pool = require("./dbPool.js");
 
-app.engine('html', require('ejs').renderFile);
+app.set("view engine", "ejs");
 app.use(express.static("public"));
+//app.engine('html', require('ejs').renderFile);
 
-//routes 
+//***View routes*** 
 app.get("/", function(req, res){
  res.render("index.ejs");
 });
@@ -28,6 +31,23 @@ app.get("/admin", function(req, res){
 app.get("/reports", function(req, res){
  res.render("reports.ejs");
 });
+
+//***API Routes*** 
+
+app.get("/api/populateAlbumsArray", function(req, res){
+ 
+ let sql = "SELECT * FROM albums";
+ 
+ pool.query(sql, function(err, rows, fields){
+  if (err) throw err;
+  console.log(rows);
+  res.send(rows);
+  
+ });
+
+});//app.get(populateAlbumArray);
+
+
 
  //start server
  app.listen(process.env.PORT, process.env.IP, function(){
