@@ -1,3 +1,4 @@
+const pool = require("./dbPool.js");
 $(document).ready(function() {
     
     // Clear any prior error messages.
@@ -25,17 +26,3 @@ $(document).ready(function() {
         window.location.pathname = "/signup";
     });
 });
-
-// Determinf if the username already exists.
-function isValidUser() {
-    
-    // Make sure username is not empty.
-    return true;
-}
-
-// Makes sure the password matches the user.
-function isUserPassword() {
-    
-    // Make sure password is not empty.
-    return true;
-}
