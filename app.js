@@ -16,6 +16,11 @@ app.use(session({
 
 app.use(express.urlencoded({ extended: true }));
 
+//start server
+app.listen(process.env.PORT, process.env.IP, function() {
+   console.log("Express server is running...");
+});
+
 //***View routes*** 
 app.get("/", function(req, res) {
    res.render("index.ejs", {"username": req.session.adminUsername});
@@ -40,14 +45,14 @@ app.get("/myAccount", function(req, res) {
 
 // Only allows admin to be accessed if the user is signed in.
 // TODO: isAuth removed to speed up tests.
-app.get("/admin", isAuthenticated, function(req, res) {
-// app.get("/admin", function(req, res) {
+// app.get("/admin", isAuthenticated, function(req, res) {
+app.get("/admin", function(req, res) {
    res.render("admin.ejs", {"username": req.session.adminUsername});
 });
 
 // TODO: isAuth removed to speed up tests.
-app.get("/reports", isAuthenticated, function(req, res) {
-// app.get("/reports", function(req, res) {
+// app.get("/reports", isAuthenticated, function(req, res) {
+app.get("/reports", function(req, res) {
    res.render("reports.ejs", {"username": req.session.adminUsername});
 });
 
@@ -131,8 +136,22 @@ app.get("/api/getCart", function(req, res) {
    });
 }); //api/getCart
 
+//getMostRecentCart API route gets the cartID of the most recent cart
+app.get("/api/getMostRecentCart", function(req, res) {
+   let sql = 'SELECT cartID FROM cart ORDER BY cartID DESC LIMIT 1';
+
+   pool.query(sql, function(err, rows, fields) {
+      if (err) throw err;
+      res.send(rows);
+   });
+}); //api/getCart
+
+
 //submitOrder adds the customer order to the orders table
 app.get("/api/submitOrder", function(req, res) {
+   // Delete contents of cart for active user.
+   deleteCart(req, res);
+   
    let sql = 'INSERT INTO orders (albumIDs, albumTitles, orderTotal) VALUES (?,?,?)';
    let sqlParams = [req.query.albumIDs, req.query.albumTitles, req.query.orderTotal];
 
@@ -153,6 +172,31 @@ app.get("/api/addAlbumsArray", function(req, res) {
    });
 }); // api/addAlbumsArray
 
+//api to update album attributes in database
+app.get("/api/updateAlbumsDatabase", function(req, res){
+   let sql = "UPDATE albums SET title =?, artist =?, coverImage =?, price =?, genre=?, tag1=?, tag2=? WHERE albumID =?";
+   let sqlParams = [req.query.title, req.query.artist, req.query.coverImage, req.query.price,req.query.genre, req.query.tag1, req.query.tag2, req.query.albumID];
+   
+   pool.query(sql, sqlParams, function(err, rows, fields){
+      if (err) throw err;
+      console.log(rows.affectedRows.toString() );
+      res.send(rows.affectedRows.toString() );
+   });
+});
+//api/retrieveAlbumDetails
+
+app.get("/api/retrieveAlbumDetails", function(req, res){
+   let sql = "SELECT * FROM albums where albumID =?";
+   let sqlParams = [req.query.albumID];
+   
+   pool.query(sql, sqlParams, function(err, rows, fields){
+      if (err) throw err;
+      console.log(rows);
+      res.send(rows);
+   });
+});//api/retrieveAlbumDetails
+
+
 app.get("/api/updateAlbumsArray", function(req, res) {
    let sql = "INSERT INTO albums (title, artist, coverImage, price, genre, tag1, tag2) VALUES (?, ?, ?, ?, ?, ?, ?)";
    let sqlParams = [req.query.title, req.query.artist, req.query.coverImage, req.query.price, req.query.genre, req.query.tag1, req.query.tag2];
@@ -164,7 +208,7 @@ app.get("/api/updateAlbumsArray", function(req, res) {
    });
 }); // api/updateAlbumsArray
 
-app.get("/api/deleteAlbumsArray", function(req, res) {
+app.get("/api/deleteAlbum", function(req, res) {
    let sql = "DELETE FROM albums WHERE albumID = ?";
    let sqlParams = [req.query.albumID];
 
@@ -181,7 +225,6 @@ app.get("/api/totalSalesOrderReport", function(req, res){
  
  pool.query(sql, function(err, rows, fields){
   if (err) throw err;
-  console.log(rows);
   res.send(rows);
  });
 });
@@ -192,9 +235,7 @@ app.get("/api/avgOrderReport", function(req, res){
  
  pool.query(sql, function(err, rows, fields){
   if (err) throw err;
-  console.log(rows);
   res.send(rows);
-  
  });
 });
 
@@ -204,14 +245,8 @@ app.get("/api/avgAlbumReport", function(req, res){
  
  pool.query(sql, function(err, rows, fields){
   if (err) throw err;
-  console.log(rows);
   res.send(rows);
  });
-});
-
-//start server
-app.listen(process.env.PORT, process.env.IP, function() {
-   console.log("Express server is running...");
 });
 
 // Verify password is valid. Currently only for admin.
@@ -256,4 +291,17 @@ function isAuthenticated(req, res, next) {
    else {
       next();
    }
+}
+
+// Deletes entire cart table. Will delete only contents at customerID if 
+// sign-in is required.
+function deleteCart(req, res) {
+   let sql = "DELETE FROM cart WHERE customerID = ?";
+   let sqlParams = 0;   // Delete at customerID = 0. All records.
+   // let sqlParams = [req.session.customerID];
+
+   pool.query(sql, sqlParams, function(err, rows, fields) {
+      if (err) throw err;
+      console.log(rows);
+   });
 }
