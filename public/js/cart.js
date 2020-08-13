@@ -3,7 +3,6 @@ $(document).ready(function(){
     //global variables
     var itemsPrice = 0.00;
     var tax = 0;
-    var shipping = 0;
     var total = 0;
     
     var cartIDs = [];
@@ -21,7 +20,7 @@ $(document).ready(function(){
             
             success: function(data, status){
                 let string = JSON.stringify(data);
-                
+        
                 // Clean stringified JSON data.
                 let cleanString = "";
                 let lastCharNumber = false;
@@ -54,7 +53,7 @@ $(document).ready(function(){
         });//ajax
     }//getCart()
     
-    //API call using Ajax to populate albums array from database. Uses app.get("/api/populateAlbumsArray") route in App.js
+    //API call using Ajax to populate albums array from database. Uses app.get("/api/populateAlbumsArray") route in app.js
     populateAlbumArray();
     function populateAlbumArray(){
         $.ajax({
@@ -106,7 +105,6 @@ $(document).ready(function(){
         
         itemsPrice = 0.00;
         tax = 0;
-        shipping = 0;
         total = 0;
     
         //iterate through customer cart and add price of each element in cart
@@ -115,12 +113,10 @@ $(document).ready(function(){
         });
             
         tax = Math.round((itemsPrice * 0.06), 2);
-        shipping = Math.round((itemsPrice * .10), 2);
-        total = Math.round((itemsPrice + tax + shipping), 2);
+        total = Math.round((itemsPrice + tax), 2);
         
         $("#itemsTotal").html(`Items: $${itemsPrice}`);
         $("#taxTotal").html(`Tax: $${tax}`);
-        //$("#shippingTotal").html(`Shipping: $${shipping}`);
         $("#orderTotal").html(`Total Price: $${total}`);
     }//calculate totals
     
@@ -160,10 +156,9 @@ $(document).ready(function(){
                 $("#placeOrder").hide();
                 $("#itemsTotal").hide();
                 $("#taxTotal").hide();
-                $("#shippingTotal").hide();
                 $("#orderTotal").hide();
                 
-                $('#cartError').html('<p class="text-success" style="font-size: 1.5em"> <strong> Thanks for your Order</strong> </p> ');
+                $('#cartError').html('<p class="text-success" style="font-size: 1.5em"> ♫ <strong> Thanks for your Order </strong> ♫ </p> ');
                 $('#cartError').append('<p> <i> Check your email for a digital download link! </i> </p>');
                 $('#cartError').append('<p> <strong> Order Details: </strong> </p> <hr />');
 
